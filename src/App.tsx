@@ -61,6 +61,7 @@ function App() {
   const [duration, setDuration] = useState(1)
   const [targetCpl, setTargetCpl] = useState(94)
   const [targetCac, setTargetCac] = useState(1000)
+  const [leadToSqlRate, setLeadToSqlRate] = useState(21.5)
   const [sqlCloseRate, setSqlCloseRate] = useState(44)
   const [kpiPercent, setKpiPercent] = useState(15)
   const [successFeePercent, setSuccessFeePercent] = useState(10)
@@ -84,17 +85,17 @@ function App() {
       : mediaPresets[mediaPreset].hypotheses
   const serviceMonthly = 4500 + (hasContent ? 1200 : 0)
   const estimatedLeads = Math.max(0.1, Math.round((mediaBudget / targetCpl) * 10) / 10)
+  const estimatedOpportunities = Math.max(
+    0.1,
+    Math.round((estimatedLeads * (leadToSqlRate / 100)) * 10) / 10,
+  )
   const estimatedCustomers = Math.max(
     0.1,
-    Math.round((mediaBudget / targetCac) * 10) / 10,
+    Math.round((estimatedOpportunities * (sqlCloseRate / 100)) * 10) / 10,
   )
-  const estimatedOpportunities = Math.min(
-    estimatedLeads,
-    Math.max(
-      estimatedCustomers,
-      Math.round((estimatedCustomers / (sqlCloseRate / 100)) * 10) / 10,
-    ),
-  )
+  const calculatedCac = mediaBudget / estimatedCustomers
+  const cacDeltaPercent = ((calculatedCac - targetCac) / targetCac) * 100
+  const cacOnTarget = calculatedCac <= targetCac
   const kpiBonusMonthly = (mediaBudget * kpiPercent) / 100
   const successFeeMonthly =
     (averageDealValue * estimatedCustomers * successFeePercent) / 100
@@ -129,6 +130,7 @@ function App() {
     duration,
     targetCpl,
     targetCac,
+    leadToSqlRate,
     sqlCloseRate,
     kpiPercent,
     successFeePercent,
@@ -159,7 +161,9 @@ function App() {
       successFeeMonthly,
       targetCpl,
       targetCac,
+      leadToSqlRate,
       sqlCloseRate,
+      calculatedCac,
       hypotheses,
       serviceMonthly,
       totalMonthly,
@@ -183,7 +187,9 @@ function App() {
       successFeeMonthly,
       targetCpl,
       targetCac,
+      leadToSqlRate,
       sqlCloseRate,
+      calculatedCac,
       hypotheses,
       serviceMonthly,
       totalMonthly,
@@ -634,9 +640,34 @@ function App() {
                 <span>$2,500</span>
               </div>
               <small className="control-hint">
-                {money(mediaBudget)} ÷ {money(targetCac)} = ~{estimatedCustomers}{' '}
-                сделок
+                Контрольный KPI. Расчетный CAC по воронке:{' '}
+                <strong className={cacOnTarget ? 'metric-good' : 'metric-warning'}>
+                  {money(calculatedCac)}
+                </strong>
+                {' '}({cacOnTarget ? 'в пределах цели' : `выше цели на ${Math.round(cacDeltaPercent)}%`})
               </small>
+            </div>
+
+            <div className="control-group">
+              <div className="label-row">
+                <label htmlFor="leadToSqlRate">Конверсия Lead → SQL</label>
+                <span>{leadToSqlRate}%</span>
+              </div>
+              <input
+                id="leadToSqlRate"
+                type="range"
+                min="5"
+                max="60"
+                step="0.5"
+                value={leadToSqlRate}
+                onChange={(event) =>
+                  setLeadToSqlRate(Number(event.target.value))
+                }
+              />
+              <div className="range-scale">
+                <span>5%</span>
+                <span>60%</span>
+              </div>
             </div>
 
             <div className="control-group">
@@ -671,7 +702,7 @@ function App() {
                 <span>ЛИДЫ</span>
                 <strong>~{estimatedLeads}</strong>
               </div>
-              <i>→</i>
+              <i>× {leadToSqlRate}%</i>
               <div>
                 <span>SQL</span>
                 <strong>~{estimatedOpportunities}</strong>
@@ -680,6 +711,11 @@ function App() {
               <div>
                 <span>СДЕЛКИ</span>
                 <strong>~{estimatedCustomers}</strong>
+              </div>
+              <i>→</i>
+              <div>
+                <span>РАСЧЕТНЫЙ CAC</span>
+                <strong>{money(calculatedCac)}</strong>
               </div>
             </div>
           </div>

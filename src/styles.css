@@ -94,6 +94,18 @@ button {
   font-size: 12px;
 }
 
+.control-hint strong {
+  font-weight: 600;
+}
+
+.metric-good {
+  color: #248a3d;
+}
+
+.metric-warning {
+  color: #c93400;
+}
+
 .percent-input input {
   padding-left: 14px;
 }
@@ -1082,7 +1094,7 @@ input[type="range"] {
   margin-top: 8px;
   padding: 18px;
   display: grid;
-  grid-template-columns: repeat(7, auto);
+  grid-template-columns: repeat(9, auto);
   align-items: center;
   justify-content: space-between;
   gap: 10px;

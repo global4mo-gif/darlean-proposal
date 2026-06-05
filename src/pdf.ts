@@ -16,7 +16,9 @@ export type ProposalData = {
   successFeeMonthly: number
   targetCpl: number
   targetCac: number
+  leadToSqlRate: number
   sqlCloseRate: number
+  calculatedCac: number
   hypotheses: string
   serviceMonthly: number
   totalMonthly: number
@@ -218,7 +220,7 @@ export async function downloadProposal(data: ProposalData) {
         layout: 'lightHorizontalLines',
       },
       {
-        text: `Связанная модель: ${money(data.mediaBudget)} media ÷ CPL ${money(data.targetCpl)} = ~${data.estimatedLeads} лидов; ${money(data.mediaBudget)} ÷ CAC ${money(data.targetCac)} = ~${data.estimatedCustomers} сделок; при конверсии SQL → сделка ${data.sqlCloseRate}% требуется ~${data.estimatedOpportunities} SQL. Прогноз — ориентир, а не гарантия результата.`,
+        text: `Связанная модель: ${money(data.mediaBudget)} media ÷ CPL ${money(data.targetCpl)} = ~${data.estimatedLeads} лидов; Lead → SQL ${data.leadToSqlRate}% = ~${data.estimatedOpportunities} SQL; SQL → сделка ${data.sqlCloseRate}% = ~${data.estimatedCustomers} сделок. Расчетный CAC ${money(data.calculatedCac)} при целевом ${money(data.targetCac)}. Прогноз — ориентир, а не гарантия результата.`,
         style: 'muted',
         margin: [0, 7, 0, 0],
       },
