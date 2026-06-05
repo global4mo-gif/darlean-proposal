@@ -8,7 +8,12 @@ export type ProposalData = {
   hasContent: boolean
   mediaLabel: string
   mediaBudget: number
-  kpiBonus: number
+  kpiPercent: number
+  kpiBonusMonthly: number
+  successFeePercent: number
+  averageDealValue: number
+  closedDeals: number
+  successFeeMonthly: number
   targetCpl: number
   targetCac: number
   hypotheses: string
@@ -158,8 +163,17 @@ export async function downloadProposal(data: ProposalData) {
               ? [['Контент в соцсетях', money(1200 * data.duration)]]
               : []),
             [`Media: ${data.mediaLabel}`, money(data.mediaBudget * data.duration)],
-            ...(data.kpiBonus > 0
-              ? [['KPI-бонус', money(data.kpiBonus * data.duration)]]
+            ...(data.kpiBonusMonthly > 0
+              ? [[
+                  `KPI-бонус · ${data.kpiPercent}% от media`,
+                  money(data.kpiBonusMonthly * data.duration),
+                ]]
+              : []),
+            ...(data.successFeeMonthly > 0
+              ? [[
+                  `Оплата за результат · ${data.successFeePercent}%`,
+                  money(data.successFeeMonthly * data.duration),
+                ]]
               : []),
             [
               { text: `Итого · ${data.duration} мес.`, bold: true },
@@ -204,6 +218,11 @@ export async function downloadProposal(data: ProposalData) {
       },
       {
         text: `Модель: media ${money(data.mediaBudget)}, CPL ${money(data.targetCpl)}, целевой CAC до ${money(data.targetCac)}. Прогноз — ориентир для планирования, а не гарантия результата.`,
+        style: 'muted',
+        margin: [0, 7, 0, 0],
+      },
+      {
+        text: `Переменная часть: KPI-бонус ${data.kpiPercent}% от медиабюджета (${money(data.kpiBonusMonthly)} / мес.) и ${data.successFeePercent}% от стоимости закрытых сделок. В прогнозе: ${data.closedDeals} сделок по ${money(data.averageDealValue)}, оплата за результат ${money(data.successFeeMonthly)} / мес.`,
         style: 'muted',
         margin: [0, 7, 0, 0],
       },

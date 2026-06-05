@@ -14,8 +14,10 @@ import {
   X,
 } from 'lucide-react'
 import { downloadProposal } from './pdf'
+import { CompetitorsPage, SegmentsPage } from './InsightPages'
 
 type MediaPreset = 'lean' | 'base' | 'push' | 'custom'
+type Page = 'proposal' | 'competitors' | 'segments'
 
 const mediaPresets = {
   lean: {
@@ -46,6 +48,12 @@ const money = (value: number) =>
   }).format(value)
 
 function App() {
+  const getPage = (): Page => {
+    const hash = window.location.hash.replace('#', '')
+    return hash === 'competitors' || hash === 'segments' ? hash : 'proposal'
+  }
+
+  const [page, setPage] = useState<Page>(getPage)
   const [menuOpen, setMenuOpen] = useState(false)
   const [hasContent, setHasContent] = useState(true)
   const [mediaPreset, setMediaPreset] = useState<MediaPreset>('base')
@@ -53,7 +61,10 @@ function App() {
   const [duration, setDuration] = useState(1)
   const [targetCpl, setTargetCpl] = useState(94)
   const [targetCac, setTargetCac] = useState(1000)
-  const [kpiBonus, setKpiBonus] = useState(0)
+  const [kpiPercent, setKpiPercent] = useState(15)
+  const [successFeePercent, setSuccessFeePercent] = useState(10)
+  const [averageDealValue, setAverageDealValue] = useState(5000)
+  const [closedDeals, setClosedDeals] = useState(5)
   const [clientName, setClientName] = useState('Команда Darlean')
   const [version, setVersion] = useState(1)
   const [generatedAt, setGeneratedAt] = useState(new Date())
@@ -72,7 +83,11 @@ function App() {
           : '3–4'
       : mediaPresets[mediaPreset].hypotheses
   const serviceMonthly = 4500 + (hasContent ? 1200 : 0)
-  const totalMonthly = serviceMonthly + mediaBudget + kpiBonus
+  const kpiBonusMonthly = (mediaBudget * kpiPercent) / 100
+  const successFeeMonthly =
+    (averageDealValue * closedDeals * successFeePercent) / 100
+  const totalMonthly =
+    serviceMonthly + mediaBudget + kpiBonusMonthly + successFeeMonthly
   const projectTotal = totalMonthly * duration
   const estimatedLeads = Math.max(1, Math.round(mediaBudget / targetCpl))
   const estimatedOpportunities = Math.max(
@@ -80,6 +95,16 @@ function App() {
     Math.round(estimatedLeads * (13.7 / 64) * 10) / 10,
   )
   const estimatedCustomers = Math.max(1, Math.round(mediaBudget / targetCac))
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setPage(getPage())
+      setMenuOpen(false)
+      window.scrollTo({ top: 0 })
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
 
   useEffect(() => {
     if (firstRender.current) {
@@ -98,7 +123,10 @@ function App() {
     duration,
     targetCpl,
     targetCac,
-    kpiBonus,
+    kpiPercent,
+    successFeePercent,
+    averageDealValue,
+    closedDeals,
     clientName,
   ])
 
@@ -117,7 +145,12 @@ function App() {
       hasContent,
       mediaLabel,
       mediaBudget,
-      kpiBonus,
+      kpiPercent,
+      kpiBonusMonthly,
+      successFeePercent,
+      averageDealValue,
+      closedDeals,
+      successFeeMonthly,
       targetCpl,
       targetCac,
       hypotheses,
@@ -136,7 +169,12 @@ function App() {
       hasContent,
       mediaLabel,
       mediaBudget,
-      kpiBonus,
+      kpiPercent,
+      kpiBonusMonthly,
+      successFeePercent,
+      averageDealValue,
+      closedDeals,
+      successFeeMonthly,
       targetCpl,
       targetCac,
       hypotheses,
@@ -154,6 +192,18 @@ function App() {
     setMenuOpen(false)
   }
 
+  const navigate = (nextPage: Page) => {
+    window.location.hash = nextPage === 'proposal' ? 'proposal' : nextPage
+  }
+
+  if (page === 'competitors') {
+    return <CompetitorsPage onNavigate={navigate} />
+  }
+
+  if (page === 'segments') {
+    return <SegmentsPage onNavigate={navigate} />
+  }
+
   return (
     <main>
       <nav className="nav">
@@ -162,8 +212,8 @@ function App() {
         </button>
         <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
           <button onClick={() => scrollTo('approach')}>Подход</button>
-          <button onClick={() => scrollTo('scope')}>Что входит</button>
-          <button onClick={() => scrollTo('comparison')}>Сравнение</button>
+          <button onClick={() => navigate('competitors')}>Конкуренты</button>
+          <button onClick={() => navigate('segments')}>Сегменты</button>
           <button className="nav-cta" onClick={() => scrollTo('calculator')}>
             Рассчитать
           </button>
@@ -460,21 +510,88 @@ function App() {
                 </select>
               </div>
               <div className="control-group">
-                <label htmlFor="kpiBonus">KPI-бонус / мес.</label>
-                <div className="money-input">
-                  <span>$</span>
+                <label htmlFor="kpiPercent">KPI-бонус от media / мес.</label>
+                <div className="money-input percent-input">
                   <input
-                    id="kpiBonus"
+                    id="kpiPercent"
                     type="number"
                     min="0"
-                    step="250"
-                    value={kpiBonus}
+                    max="100"
+                    step="1"
+                    value={kpiPercent}
                     onChange={(event) =>
-                      setKpiBonus(Math.max(0, Number(event.target.value)))
+                      setKpiPercent(
+                        Math.min(100, Math.max(0, Number(event.target.value))),
+                      )
+                    }
+                  />
+                  <span>%</span>
+                </div>
+                <small className="control-hint">
+                  {money(kpiBonusMonthly)} при текущем медиабюджете
+                </small>
+              </div>
+            </div>
+
+            <div className="performance-fee">
+              <div className="fee-heading">
+                <div>
+                  <span>ОПЛАТА ЗА РЕЗУЛЬТАТ</span>
+                  <h3>{successFeePercent}% от стоимости закрытых сделок</h3>
+                </div>
+                <div className="money-input percent-input compact-input">
+                  <input
+                    aria-label="Процент оплаты за результат"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={successFeePercent}
+                    onChange={(event) =>
+                      setSuccessFeePercent(
+                        Math.min(100, Math.max(0, Number(event.target.value))),
+                      )
+                    }
+                  />
+                  <span>%</span>
+                </div>
+              </div>
+              <div className="split-controls">
+                <div className="control-group">
+                  <label htmlFor="averageDealValue">Средняя стоимость сделки</label>
+                  <div className="money-input">
+                    <span>$</span>
+                    <input
+                      id="averageDealValue"
+                      type="number"
+                      min="0"
+                      step="500"
+                      value={averageDealValue}
+                      onChange={(event) =>
+                        setAverageDealValue(
+                          Math.max(0, Number(event.target.value)),
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="control-group">
+                  <label htmlFor="closedDeals">Закрытых сделок / мес.</label>
+                  <input
+                    id="closedDeals"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={closedDeals}
+                    onChange={(event) =>
+                      setClosedDeals(Math.max(0, Number(event.target.value)))
                     }
                   />
                 </div>
               </div>
+              <p className="fee-total">
+                Прогнозная оплата за результат: <strong>{money(successFeeMonthly)} / мес.</strong>
+              </p>
             </div>
 
             <div className="control-group">
@@ -545,10 +662,16 @@ function App() {
                 <span>Media · {mediaLabel}</span>
                 <strong>{money(mediaBudget * duration)}</strong>
               </div>
-              {kpiBonus > 0 && (
+              {kpiBonusMonthly > 0 && (
                 <div>
-                  <span>KPI-бонус</span>
-                  <strong>{money(kpiBonus * duration)}</strong>
+                  <span>KPI-бонус · {kpiPercent}%</span>
+                  <strong>{money(kpiBonusMonthly * duration)}</strong>
+                </div>
+              )}
+              {successFeeMonthly > 0 && (
+                <div>
+                  <span>За результат · {successFeePercent}%</span>
+                  <strong>{money(successFeeMonthly * duration)}</strong>
                 </div>
               )}
             </div>
@@ -662,6 +785,13 @@ function App() {
           Цены за пользователя в месяц для рынка США; Darlean — по EU-версии.
           Источник: предоставленная сравнительная карта.
         </p>
+        <button
+          className="button secondary-button"
+          onClick={() => navigate('competitors')}
+        >
+          Открыть полное сравнение
+          <ChevronRight size={18} />
+        </button>
       </section>
 
       <section className="outcomes dark-section">
