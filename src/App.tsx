@@ -66,6 +66,9 @@ function App() {
   const [kpiPercent, setKpiPercent] = useState(15)
   const [successFeePercent, setSuccessFeePercent] = useState(10)
   const [averageDealValue, setAverageDealValue] = useState(5000)
+  const [licensePrice, setLicensePrice] = useState(16)
+  const [employeesPerClient, setEmployeesPerClient] = useState(20)
+  const [retentionMonths, setRetentionMonths] = useState(12)
   const [clientName, setClientName] = useState('Команда Darlean')
   const [version, setVersion] = useState(1)
   const [generatedAt, setGeneratedAt] = useState(new Date())
@@ -102,6 +105,19 @@ function App() {
   const totalMonthly =
     serviceMonthly + mediaBudget + kpiBonusMonthly + successFeeMonthly
   const projectTotal = totalMonthly * duration
+  const cohortCustomers = estimatedCustomers * duration
+  const monthlyRevenuePerClient = licensePrice * employeesPerClient
+  const customerLtv = monthlyRevenuePerClient * retentionMonths
+  const cohortMrr = cohortCustomers * monthlyRevenuePerClient
+  const cohortLtvRevenue = cohortCustomers * customerLtv
+  const revenueMultiple =
+    projectTotal > 0 ? cohortLtvRevenue / projectTotal : 0
+  const projectedRoi =
+    projectTotal > 0
+      ? ((cohortLtvRevenue - projectTotal) / projectTotal) * 100
+      : 0
+  const paybackMonths =
+    cohortMrr > 0 ? projectTotal / cohortMrr : 0
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -135,6 +151,9 @@ function App() {
     kpiPercent,
     successFeePercent,
     averageDealValue,
+    licensePrice,
+    employeesPerClient,
+    retentionMonths,
     clientName,
   ])
 
@@ -171,6 +190,17 @@ function App() {
       estimatedLeads,
       estimatedOpportunities,
       estimatedCustomers,
+      licensePrice,
+      employeesPerClient,
+      retentionMonths,
+      monthlyRevenuePerClient,
+      customerLtv,
+      cohortCustomers,
+      cohortMrr,
+      cohortLtvRevenue,
+      revenueMultiple,
+      projectedRoi,
+      paybackMonths,
     }),
     [
       version,
@@ -197,6 +227,17 @@ function App() {
       estimatedLeads,
       estimatedOpportunities,
       estimatedCustomers,
+      licensePrice,
+      employeesPerClient,
+      retentionMonths,
+      monthlyRevenuePerClient,
+      customerLtv,
+      cohortCustomers,
+      cohortMrr,
+      cohortLtvRevenue,
+      revenueMultiple,
+      projectedRoi,
+      paybackMonths,
     ],
   )
 
@@ -795,6 +836,119 @@ function App() {
               являются гарантией результата.
             </p>
           </aside>
+        </div>
+      </section>
+
+      <section className="economics-section" id="economics">
+        <div className="section-heading">
+          <p className="section-kicker">ФИНАНСОВАЯ ОТДАЧА</p>
+          <h2>Сколько принесет привлеченная когорта.</h2>
+          <p>
+            Настройте модель монетизации Darlean. Расчет сопоставляет LTV
+            клиентов, привлеченных за период проекта, с полной стоимостью КП.
+          </p>
+        </div>
+
+        <div className="economics-shell">
+          <div className="economics-controls">
+            <div className="economics-inputs">
+              <div className="control-group">
+                <label htmlFor="licensePrice">Лицензия / сотрудник / мес.</label>
+                <div className="money-input">
+                  <span>$</span>
+                  <input
+                    id="licensePrice"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={licensePrice}
+                    onChange={(event) =>
+                      setLicensePrice(Math.max(0, Number(event.target.value)))
+                    }
+                  />
+                </div>
+              </div>
+              <div className="control-group">
+                <label htmlFor="employeesPerClient">Сотрудников у клиента</label>
+                <input
+                  id="employeesPerClient"
+                  className="number-input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={employeesPerClient}
+                  onChange={(event) =>
+                    setEmployeesPerClient(
+                      Math.max(1, Number(event.target.value)),
+                    )
+                  }
+                />
+              </div>
+              <div className="control-group">
+                <label htmlFor="retentionMonths">Удержание клиента</label>
+                <div className="months-input">
+                  <input
+                    id="retentionMonths"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={retentionMonths}
+                    onChange={(event) =>
+                      setRetentionMonths(
+                        Math.max(1, Number(event.target.value)),
+                      )
+                    }
+                  />
+                  <span>мес.</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="economics-formula">
+              <span>{money(licensePrice)}</span>
+              <i>×</i>
+              <span>{employeesPerClient} сотрудников</span>
+              <i>×</i>
+              <span>{retentionMonths} мес.</span>
+              <i>=</i>
+              <strong>{money(customerLtv)} LTV клиента</strong>
+            </div>
+          </div>
+
+          <div className="economics-results">
+            <div className="economics-lead">
+              <span>ПРОГНОЗ LTV-ВЫРУЧКИ КОГОРТЫ</span>
+              <strong>{money(cohortLtvRevenue)}</strong>
+              <small>
+                ~{cohortCustomers.toFixed(1)} клиентов за {duration}{' '}
+                {duration === 1 ? 'месяц' : 'месяца'}
+              </small>
+            </div>
+            <div className="economics-metrics">
+              <article>
+                <span>MRR когорты</span>
+                <strong>{money(cohortMrr)}</strong>
+              </article>
+              <article>
+                <span>Выручка / бюджет</span>
+                <strong>{revenueMultiple.toFixed(1)}×</strong>
+              </article>
+              <article>
+                <span>Прогнозный ROI</span>
+                <strong className={projectedRoi >= 0 ? 'positive' : 'negative'}>
+                  {Math.round(projectedRoi)}%
+                </strong>
+              </article>
+              <article>
+                <span>Окупаемость</span>
+                <strong>{paybackMonths.toFixed(1)} мес.</strong>
+              </article>
+            </div>
+            <p>
+              Расчет показывает потенциальную выручку без учета себестоимости,
+              налогов, скидок и постепенного подключения клиентов.
+            </p>
+          </div>
         </div>
       </section>
 

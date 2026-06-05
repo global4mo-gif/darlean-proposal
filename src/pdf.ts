@@ -26,6 +26,17 @@ export type ProposalData = {
   estimatedLeads: number
   estimatedOpportunities: number
   estimatedCustomers: number
+  licensePrice: number
+  employeesPerClient: number
+  retentionMonths: number
+  monthlyRevenuePerClient: number
+  customerLtv: number
+  cohortCustomers: number
+  cohortMrr: number
+  cohortLtvRevenue: number
+  revenueMultiple: number
+  projectedRoi: number
+  paybackMonths: number
 }
 
 const money = (value: number) =>
@@ -226,6 +237,34 @@ export async function downloadProposal(data: ProposalData) {
       },
       {
         text: `Переменная часть: KPI-бонус ${data.kpiPercent}% от медиабюджета (${money(data.kpiBonusMonthly)} / мес.) и ${data.successFeePercent}% от стоимости закрытых сделок. В прогнозе: ${data.closedDeals} сделок по ${money(data.averageDealValue)}, оплата за результат ${money(data.successFeeMonthly)} / мес.`,
+        style: 'muted',
+        margin: [0, 7, 0, 0],
+      },
+      { text: 'Экономическая выгода', style: 'h2' },
+      {
+        table: {
+          widths: ['*', '*', '*', '*'],
+          body: [
+            ['Лицензия', 'Сотрудников', 'Удержание', 'LTV клиента'],
+            [
+              { text: `${money(data.licensePrice)} / мес.`, bold: true },
+              { text: `${data.employeesPerClient}`, bold: true },
+              { text: `${data.retentionMonths} мес.`, bold: true },
+              { text: money(data.customerLtv), bold: true },
+            ],
+            ['Клиентов в когорте', 'MRR когорты', 'LTV-выручка', 'ROI'],
+            [
+              { text: `~${data.cohortCustomers}`, bold: true },
+              { text: money(data.cohortMrr), bold: true },
+              { text: money(data.cohortLtvRevenue), bold: true },
+              { text: `${Math.round(data.projectedRoi)}%`, bold: true },
+            ],
+          ],
+        },
+        layout: 'lightHorizontalLines',
+      },
+      {
+        text: `Прогноз: выручка / бюджет ${data.revenueMultiple.toFixed(1)}×, окупаемость около ${data.paybackMonths.toFixed(1)} мес. Расчет не учитывает себестоимость, налоги, скидки и постепенное подключение клиентов.`,
         style: 'muted',
         margin: [0, 7, 0, 0],
       },
