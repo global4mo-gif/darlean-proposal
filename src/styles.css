@@ -806,7 +806,7 @@ button {
   align-items: start;
   background: #fff;
   border-radius: 24px;
-  overflow: hidden;
+  overflow: clip;
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
@@ -1123,6 +1123,7 @@ input[type="range"] {
 .summary {
   position: sticky;
   top: 82px;
+  align-self: start;
   min-height: 760px;
   padding: 44px 38px;
   color: #fff;
