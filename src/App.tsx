@@ -579,6 +579,7 @@ function App() {
                   <label htmlFor="closedDeals">Закрытых сделок / мес.</label>
                   <input
                     id="closedDeals"
+                    className="number-input"
                     type="number"
                     min="0"
                     step="1"

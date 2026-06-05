@@ -130,11 +130,6 @@ button {
   font-size: 18px;
 }
 
-.compact-input {
-  width: 110px;
-  flex: 0 0 auto;
-}
-
 .fee-total {
   margin: 4px 0 0;
 }
@@ -1038,6 +1033,29 @@ input[type="range"] {
   outline: 0;
 }
 
+.fee-heading .compact-input {
+  width: 110px;
+  min-width: 110px;
+  flex: 0 0 110px;
+  margin-top: 0;
+}
+
+.number-input {
+  width: 100%;
+  height: 48px;
+  margin-top: 12px;
+  padding: 0 14px;
+  border: 1px solid #d2d2d7;
+  border-radius: 11px;
+  outline: 0;
+  background: #fff;
+}
+
+.number-input:focus {
+  outline: 2px solid rgba(0, 102, 204, 0.22);
+  border-color: var(--blue);
+}
+
 .summary {
   position: sticky;
   top: 82px;
@@ -1456,6 +1474,7 @@ footer {
 
   .fee-heading {
     align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .insight-hero {
