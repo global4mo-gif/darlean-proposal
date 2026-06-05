@@ -1056,6 +1056,58 @@ input[type="range"] {
   border-color: var(--blue);
 }
 
+.calculated-value {
+  height: 48px;
+  margin-top: 12px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #c9def3;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.calculated-value strong {
+  color: var(--blue);
+  font-size: 18px;
+}
+
+.calculated-value span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.funnel-formula {
+  margin-top: 8px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: repeat(7, auto);
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 16px;
+  background: #1d1d1f;
+}
+
+.funnel-formula div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.funnel-formula span,
+.funnel-formula i {
+  color: #a1a1a6;
+  font-size: 10px;
+  font-style: normal;
+}
+
+.funnel-formula strong {
+  color: #fff;
+  font-size: 15px;
+}
+
 .summary {
   position: sticky;
   top: 82px;
@@ -1475,6 +1527,14 @@ footer {
   .fee-heading {
     align-items: flex-start;
     flex-wrap: wrap;
+  }
+
+  .funnel-formula {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .funnel-formula i {
+    display: none;
   }
 
   .insight-hero {

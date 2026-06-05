@@ -61,10 +61,10 @@ function App() {
   const [duration, setDuration] = useState(1)
   const [targetCpl, setTargetCpl] = useState(94)
   const [targetCac, setTargetCac] = useState(1000)
+  const [sqlCloseRate, setSqlCloseRate] = useState(44)
   const [kpiPercent, setKpiPercent] = useState(15)
   const [successFeePercent, setSuccessFeePercent] = useState(10)
   const [averageDealValue, setAverageDealValue] = useState(5000)
-  const [closedDeals, setClosedDeals] = useState(5)
   const [clientName, setClientName] = useState('Команда Darlean')
   const [version, setVersion] = useState(1)
   const [generatedAt, setGeneratedAt] = useState(new Date())
@@ -83,18 +83,24 @@ function App() {
           : '3–4'
       : mediaPresets[mediaPreset].hypotheses
   const serviceMonthly = 4500 + (hasContent ? 1200 : 0)
+  const estimatedLeads = Math.max(0.1, Math.round((mediaBudget / targetCpl) * 10) / 10)
+  const estimatedCustomers = Math.max(
+    0.1,
+    Math.round((mediaBudget / targetCac) * 10) / 10,
+  )
+  const estimatedOpportunities = Math.min(
+    estimatedLeads,
+    Math.max(
+      estimatedCustomers,
+      Math.round((estimatedCustomers / (sqlCloseRate / 100)) * 10) / 10,
+    ),
+  )
   const kpiBonusMonthly = (mediaBudget * kpiPercent) / 100
   const successFeeMonthly =
-    (averageDealValue * closedDeals * successFeePercent) / 100
+    (averageDealValue * estimatedCustomers * successFeePercent) / 100
   const totalMonthly =
     serviceMonthly + mediaBudget + kpiBonusMonthly + successFeeMonthly
   const projectTotal = totalMonthly * duration
-  const estimatedLeads = Math.max(1, Math.round(mediaBudget / targetCpl))
-  const estimatedOpportunities = Math.max(
-    0.1,
-    Math.round(estimatedLeads * (13.7 / 64) * 10) / 10,
-  )
-  const estimatedCustomers = Math.max(1, Math.round(mediaBudget / targetCac))
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -123,10 +129,10 @@ function App() {
     duration,
     targetCpl,
     targetCac,
+    sqlCloseRate,
     kpiPercent,
     successFeePercent,
     averageDealValue,
-    closedDeals,
     clientName,
   ])
 
@@ -149,10 +155,11 @@ function App() {
       kpiBonusMonthly,
       successFeePercent,
       averageDealValue,
-      closedDeals,
+      closedDeals: estimatedCustomers,
       successFeeMonthly,
       targetCpl,
       targetCac,
+      sqlCloseRate,
       hypotheses,
       serviceMonthly,
       totalMonthly,
@@ -173,10 +180,10 @@ function App() {
       kpiBonusMonthly,
       successFeePercent,
       averageDealValue,
-      closedDeals,
       successFeeMonthly,
       targetCpl,
       targetCac,
+      sqlCloseRate,
       hypotheses,
       serviceMonthly,
       totalMonthly,
@@ -576,18 +583,11 @@ function App() {
                   </div>
                 </div>
                 <div className="control-group">
-                  <label htmlFor="closedDeals">Закрытых сделок / мес.</label>
-                  <input
-                    id="closedDeals"
-                    className="number-input"
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={closedDeals}
-                    onChange={(event) =>
-                      setClosedDeals(Math.max(0, Number(event.target.value)))
-                    }
-                  />
+                  <label>Прогноз сделок / мес.</label>
+                  <div className="calculated-value">
+                    <strong>~{estimatedCustomers}</strong>
+                    <span>media ÷ CAC</span>
+                  </div>
                 </div>
               </div>
               <p className="fee-total">
@@ -632,6 +632,54 @@ function App() {
               <div className="range-scale">
                 <span>$500</span>
                 <span>$2,500</span>
+              </div>
+              <small className="control-hint">
+                {money(mediaBudget)} ÷ {money(targetCac)} = ~{estimatedCustomers}{' '}
+                сделок
+              </small>
+            </div>
+
+            <div className="control-group">
+              <div className="label-row">
+                <label htmlFor="sqlCloseRate">Конверсия SQL → сделка</label>
+                <span>{sqlCloseRate}%</span>
+              </div>
+              <input
+                id="sqlCloseRate"
+                type="range"
+                min="10"
+                max="80"
+                step="1"
+                value={sqlCloseRate}
+                onChange={(event) =>
+                  setSqlCloseRate(Number(event.target.value))
+                }
+              />
+              <div className="range-scale">
+                <span>10%</span>
+                <span>80%</span>
+              </div>
+            </div>
+
+            <div className="funnel-formula">
+              <div>
+                <span>MEDIA</span>
+                <strong>{money(mediaBudget)}</strong>
+              </div>
+              <i>÷ CPL</i>
+              <div>
+                <span>ЛИДЫ</span>
+                <strong>~{estimatedLeads}</strong>
+              </div>
+              <i>→</i>
+              <div>
+                <span>SQL</span>
+                <strong>~{estimatedOpportunities}</strong>
+              </div>
+              <i>× {sqlCloseRate}%</i>
+              <div>
+                <span>СДЕЛКИ</span>
+                <strong>~{estimatedCustomers}</strong>
               </div>
             </div>
           </div>
@@ -691,6 +739,10 @@ function App() {
                 <span>
                   <strong>~{estimatedOpportunities}</strong>
                   SQL
+                </span>
+                <span>
+                  <strong>~{estimatedCustomers}</strong>
+                  сделок
                 </span>
               </div>
             </div>
